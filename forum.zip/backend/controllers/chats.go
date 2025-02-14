@@ -9,7 +9,18 @@ import (
 	"forum/utils"
 	"net/http"
 	"strings"
+	"sync"
+
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+var clients = make(map[*websocket.Conn]string) // Mapping client -> user name
+var broadcast = make(chan Message)
+var mutex = sync.Mutex{} // Bach mantkhltoch les clients f wa7d lwa9t
 
 /*
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +82,17 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		User2 string `json:"user2"`
 	}
 */
+
+var Message models.Message
+
 func Chats(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrade.Upgrader(w, r, nil)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	defer conn.Close()
+
 	if r.Method != http.MethodPost {
 		err := errors.New("method not allowed")
 		utils.CreateResponseAndLogger(w, http.StatusMethodNotAllowed, err, "Method not allowed")

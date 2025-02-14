@@ -22,11 +22,14 @@ func CreatePost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var newPost forum.Post
+	
 	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+	
 	defer r.Body.Close()
+	
 	if len(newPost.Title) == 0 || len(newPost.Content) == 0 || len(newPost.Title) > 300 || len(newPost.Content) > 4000 {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
